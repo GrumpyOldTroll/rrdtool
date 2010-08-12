@@ -11,6 +11,8 @@ elsif /hpux/ =~ RUBY_PLATFORM
    $LDFLAGS += '+b$(EPREFIX)/lib'
 elsif /aix/ =~ RUBY_PLATFORM
    $LDFLAGS += '-Wl,-blibpath:$(EPREFIX)/lib'
+elsif /cygwin/ =~ RUBY_PLATFORM
+   $LIBS += '-lxml2'
 end
 
 dir_config("rrd","../../src","../../src/.libs")

@@ -29,7 +29,7 @@ if ($^O eq 'darwin'){
         $librrd = '-lrrd';
 }
 else {
-        $librrd = "-L../../src/.libs/ $R -lrrd";
+        $librrd = "-L../../src/.libs/ $R -lrrd -lxml2";
 }
 
 WriteMakefile(

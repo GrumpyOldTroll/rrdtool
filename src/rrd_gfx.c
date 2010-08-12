@@ -18,6 +18,7 @@
 #endif                          /* _MSC_VER */
 
 #include "rrd_tool.h"
+#ifndef RRD_NO_GRAPHICS
 #include "rrd_graph.h"
 
 
@@ -352,3 +353,5 @@ void gfx_area_fit(
     *y = (double) ((long) (*y + 0.5));
     cairo_device_to_user(cr, x, y);
 }
+#endif // RRD_NO_GRAPHICS
+

@@ -69,6 +69,10 @@ extern    "C" {
 #include <stdio.h>      /* for FILE */
 #include <string.h>
 
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
+
 /* Formerly rrd_nan_inf.h */
 #ifndef DNAN
 # define DNAN rrd_set_to_DNAN()

@@ -7,6 +7,8 @@
 #include <png.h>
 #include "rrd_tool.h"
 
+#ifndef RRD_NO_GRAPHICS
+
 int PngSize(
     FILE * fd,
     long *width,
@@ -54,3 +56,6 @@ int PngSize(
     else
         return 0;
 }
+
+#endif // RRD_NO_GRAPHICS
+

@@ -695,6 +695,7 @@ int HandleInputLine(
             free(data);
         }
     } else if (strcmp("xport", argv[1]) == 0) {
+#ifndef RRD_NO_GRAPHICS
         int       xxsize;
         unsigned long int j = 0;
         time_t    start, end, ti;
@@ -770,7 +771,11 @@ int HandleInputLine(
             setlocale(LC_NUMERIC, old_locale);
         }
         free(vtag);
+#else
+        rrd_set_error("disabled function '%s' (built with RRD_NO_GRAPHICS)", argv[1]);
+#endif // RRD_NO_GRAPHICS
     } else if (strcmp("graph", argv[1]) == 0) {
+#ifndef RRD_NO_GRAPHICS
         char    **calcpr;
 
 #ifdef notused /*XXX*/
@@ -803,8 +808,12 @@ int HandleInputLine(
                 free(calcpr);
             }
         }
+#else
+        rrd_set_error("disabled function '%s' (built with RRD_NO_GRAPHICS)", argv[1]);
+#endif // RRD_NO_GRAPHICS
 
     } else if (strcmp("graphv", argv[1]) == 0) {
+#ifndef RRD_NO_GRAPHICS
         rrd_info_t *grinfo = NULL;  /* 1 to distinguish it from the NULL that rrd_graph sends in */
 
         grinfo = rrd_graph_v(argc - 1, &argv[1]);
@@ -812,7 +821,9 @@ int HandleInputLine(
             rrd_info_print(grinfo);
             rrd_info_free(grinfo);
         }
-
+#else
+        rrd_set_error("disabled function '%s' (built with RRD_NO_GRAPHICS)", argv[1]);
+#endif // RRD_NO_GRAPHICS
     } else if (strcmp("tune", argv[1]) == 0)
         rrd_tune(argc - 1, &argv[1]);
 #ifndef WIN32

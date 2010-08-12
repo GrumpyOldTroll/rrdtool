@@ -47,8 +47,6 @@ static const char *__version__ = PACKAGE_VERSION;
 //#include "rrd_extra.h"
 
 static PyObject *ErrorObject;
-extern int optind;
-extern int opterr;
 
 /* forward declaration to keep compiler happy */
 void      initrrdtool(
@@ -261,6 +259,7 @@ static PyObject *PyRRD_fetch(
     return r;
 }
 
+#ifndef RRD_NO_GRAPH
 static char PyRRD_graph__doc__[] =
     "graph(args..): Create a graph based on data from one or several RRD\n"
     "    graph filename [-s|--start seconds] "
@@ -327,6 +326,7 @@ static PyObject *PyRRD_graph(
     destroy_args(&argv);
     return r;
 }
+#endif // RRD_NO_GRAPH
 
 static char PyRRD_tune__doc__[] =
     "tune(args...): Modify some basic properties of a Round Robin Database\n"
@@ -503,6 +503,7 @@ static PyObject *PyRRD_info(
     return r;
 }
 
+#ifndef RRD_NO_GRAPH
 static char PyRRD_graphv__doc__[] =
     "graphv is called in the same manner as graph";
 
@@ -530,6 +531,7 @@ static PyObject *PyRRD_graphv(
     destroy_args(&argv);
     return r;
 }
+#endif // RRD_NO_GRAPH
 
 static char PyRRD_updatev__doc__[] =
     "updatev is called in the same manner as update";
@@ -594,13 +596,17 @@ static PyMethodDef _rrdtool_methods[] = {
     meth("create", PyRRD_create, PyRRD_create__doc__),
     meth("update", PyRRD_update, PyRRD_update__doc__),
     meth("fetch", PyRRD_fetch, PyRRD_fetch__doc__),
+#ifndef RRD_NO_GRAPH
     meth("graph", PyRRD_graph, PyRRD_graph__doc__),
+#endif // RRD_NO_GRAPH
     meth("tune", PyRRD_tune, PyRRD_tune__doc__),
     meth("first", PyRRD_first, PyRRD_first__doc__),
     meth("last", PyRRD_last, PyRRD_last__doc__),
     meth("resize", PyRRD_resize, PyRRD_resize__doc__),
     meth("info", PyRRD_info, PyRRD_info__doc__),
+#ifndef RRD_NO_GRAPH
     meth("graphv", PyRRD_graphv, PyRRD_graphv__doc__),
+#endif // RRD_NO_GRAPH
     meth("updatev", PyRRD_updatev, PyRRD_updatev__doc__),
     meth("flushcached", PyRRD_flushcached, PyRRD_flushcached__doc__),
     {NULL, NULL, 0, NULL}

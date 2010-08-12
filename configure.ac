@@ -11,6 +11,8 @@ dnl tell automake the this script is for rrdtool
 dnl Minimum Autoconf version required.
 AC_PREREQ(2.59)
 
+dnl in cygwin, you'll do: ./configure --enable-maintainer-mode --with-rrd-default-font=/cygdrive/c/Windows/Fonts/cour.ttf
+
 dnl the official version number is
 dnl a.b.c
 AC_INIT([rrdtool],[1.4.3])
@@ -109,7 +111,7 @@ AC_ARG_WITH(rrd-default-font,
   if test -d ${WINDIR:-nodir}/cour.ttf ; then
 	RRD_DEFAULT_FONT=`cd $WINDIR;pwd`/cour.ttf
   else
-	RRD_DEFAULT_FONT='"DejaVu Sans Mono,Bitstream Vera Sans Mono,monospace,Courier"'
+	RRD_DEFAULT_FONT='"DejaVu\\ Sans\\ Mono,Bitstream\\ Vera\\ Sans\\ Mono,monospace,Courier"'
   fi
 ])
 
@@ -274,7 +276,7 @@ AC_CHECK_FUNCS(posix_fadvise)
 
 CONFIGURE_PART(Libintl Processing)
 
-AM_GNU_GETTEXT_VERSION(0.18)
+AM_GNU_GETTEXT_VERSION(0.16)
 AM_GNU_GETTEXT(external)
 
 CONFIGURE_PART(IEEE Math Checks)
@@ -524,12 +526,19 @@ dnl EX_CHECK_ALL(z,          zlibVersion,               zlib.h,                 
 dnl EX_CHECK_ALL(png,        png_access_version_number, png.h,                  libpng,      1.2.10,  http://prdownloads.sourceforge.net/libpng/, "")
 dnl EX_CHECK_ALL(freetype,   FT_Init_FreeType,          ft2build.h,		freetype2,   2.1.10,  http://prdownloads.sourceforge.net/freetype/, /usr/include/freetype2)
 dnl EX_CHECK_ALL(fontconfig, FcInit,                    fontconfig.h,		fontconfig,  2.3.1,  http://fontconfig.org/release/, /usr/include)
-EX_CHECK_ALL(cairo,      cairo_font_options_create,     cairo.h,                cairo-png,   1.4.6,  http://cairographics.org/releases/, "")
-EX_CHECK_ALL(cairo,      cairo_svg_surface_create,      cairo-svg.h,            cairo-svg,   1.4.6,  http://cairographics.org/releases/, "")
-EX_CHECK_ALL(cairo,      cairo_pdf_surface_create,      cairo-pdf.h,            cairo-pdf,   1.4.6,  http://cairographics.org/releases/, "")
-EX_CHECK_ALL(cairo,      cairo_ps_surface_create,       cairo-ps.h,             cairo-ps,    1.4.6,  http://cairographics.org/releases/, "")
+AC_ARG_ENABLE(graph,AS_HELP_STRING([--disable-graph],[do not build the graph functionality]),
+[],[enable_graph=yes])
+if test "x$GRAPH" = "xno" -o  x$enable_graph = xno; then
+    CFLAGS+=" -DRRD_NO_GRAPHICS"
+else
+    EX_CHECK_ALL(cairo,      cairo_font_options_create,     cairo.h,                cairo-png,   1.4.6,  http://cairographics.org/releases/, "")
+    EX_CHECK_ALL(cairo,      cairo_svg_surface_create,      cairo-svg.h,            cairo-svg,   1.4.6,  http://cairographics.org/releases/, "")
+    EX_CHECK_ALL(cairo,      cairo_pdf_surface_create,      cairo-pdf.h,            cairo-pdf,   1.4.6,  http://cairographics.org/releases/, "")
+    EX_CHECK_ALL(cairo,      cairo_ps_surface_create,       cairo-ps.h,             cairo-ps,    1.4.6,  http://cairographics.org/releases/, "")
+    EX_CHECK_ALL(pangocairo-1.0,  pango_cairo_context_set_font_options,  pango/pango.h,  pangocairo,  1.17,    http://ftp.gnome.org/pub/GNOME/sources/pango/1.17, "")
+fi
+
 EX_CHECK_ALL(glib-2.0,   glib_check_version,            glib.h,                 glib-2.0,    2.12.12, ftp://ftp.gtk.org/pub/glib/2.12/, "")
-EX_CHECK_ALL(pangocairo-1.0,  pango_cairo_context_set_font_options,  pango/pango.h,  pangocairo,  1.17,    http://ftp.gnome.org/pub/GNOME/sources/pango/1.17, "")
 EX_CHECK_ALL(xml2,       xmlParseFile,                  libxml/parser.h,        libxml-2.0,        2.6.31,  http://xmlsoft.org/downloads.html, /usr/include/libxml2)
 
 if test "$EX_CHECK_ALL_ERR" = "YES"; then

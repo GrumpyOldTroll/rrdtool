@@ -29,6 +29,7 @@
 #include "rrd_tool.h"
 #include "rrd_client.h"
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,9 +39,13 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <netdb.h>
+#include <sys/un.h>
 #include <limits.h>
+#include <netinet/in.h>
+#ifdef DLL_EXPORT
+#include "fix_cygwin.h"
+#endif
 
 #ifndef ENODATA
 #define ENODATA ENOENT

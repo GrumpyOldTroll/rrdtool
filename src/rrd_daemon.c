@@ -110,6 +110,15 @@
 #include <grp.h>
 
 #include <glib-2.0/glib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <sys/un.h>
+#include <limits.h>
+#include <netinet/in.h>
+#ifdef DLL_EXPORT
+#include "fix_cygwin.h"
+#endif
 /* }}} */
 
 #define RRDD_LOG(severity, ...) \
