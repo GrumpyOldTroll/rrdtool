@@ -1044,3 +1044,17 @@ int rrd_proc_start_end(
     }
     return 0;
 }                       /* rrd_proc_start_end */
+
+int rrd_proc_single(
+    rrd_time_value_t * single_tv,
+    time_t *single)
+{
+    if (single_tv->type == RELATIVE_TO_END_TIME || single_tv->type == RELATIVE_TO_START_TIME) {
+        rrd_set_error("single time cannot be relative to itself");
+        return -1;
+    }
+
+    *single = mktime(&(single_tv->tm)) + single_tv->offset;
+    
+    return 0;
+}                       /* rrd_proc_single */

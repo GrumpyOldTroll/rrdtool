@@ -198,14 +198,14 @@ static PyObject *PyRRD_fetch(
     PyObject *r;
     rrd_value_t *data, *datai;
     unsigned long step, ds_cnt;
-    time_t    start, end;
+    time_t    start, end, stop;
     int       argc;
     char    **argv, **ds_namv;
 
     if (create_args("fetch", args, &argc, &argv) < 0)
         return NULL;
 
-    if (rrd_fetch(argc, argv, &start, &end, &step,
+    if (rrd_fetch(argc, argv, &start, &end, &step, &stop,
                   &ds_cnt, &ds_namv, &data) == -1) {
         PyErr_SetString(ErrorObject, rrd_get_error());
         rrd_clear_error();

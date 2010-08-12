@@ -90,7 +90,11 @@ extern    "C" {
             unsigned long *step,
             unsigned long *ds_cnt,
             char ***ds_namv,
-            rrd_value_t **data);
+            rrd_value_t **data,
+            bool single_arg_present,
+            bool search_backwards,
+            bool stop_present,
+            time_t *stop);
 
 
 #ifdef HAVE_LIBDBI

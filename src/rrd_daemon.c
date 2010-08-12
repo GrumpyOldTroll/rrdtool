@@ -1597,7 +1597,7 @@ static int handle_request_fetch (HANDLER_PROTO) /* {{{ */
   data = NULL;
 
   status = rrd_fetch_r (file, cf, &start_tm, &end_tm, &step,
-      &ds_cnt, &ds_namv, &data);
+      &ds_cnt, &ds_namv, &data, false, false, false, 0);
   if (status != 0)
     return (send_response(sock, RESP_ERR,
           "rrd_fetch_r failed: %s\n", rrd_get_error ()));

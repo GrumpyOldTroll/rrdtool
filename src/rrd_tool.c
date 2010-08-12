@@ -670,13 +670,13 @@ int HandleInputLine(
     else if (strcmp("update", argv[1]) == 0)
         rrd_update(argc - 1, &argv[1]);
     else if (strcmp("fetch", argv[1]) == 0) {
-        time_t    start, end, ti;
+        time_t    start, end, stop, ti;
         unsigned long step, ds_cnt, i, ii;
         rrd_value_t *data, *datai;
         char    **ds_namv;
 
         if (rrd_fetch
-            (argc - 1, &argv[1], &start, &end, &step, &ds_cnt, &ds_namv,
+            (argc - 1, &argv[1], &start, &end, &stop, &step, &ds_cnt, &ds_namv,
              &data) != -1) {
             datai = data;
             printf("           ");

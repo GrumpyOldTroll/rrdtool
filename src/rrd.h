@@ -139,6 +139,11 @@ extern    "C" {
     size_t,
     void *);
 
+    typedef enum bool {
+        true = 1,
+        false = 0,
+    } bool;
+
 /* main function blocks */
     int       rrd_create(
     int,
@@ -177,6 +182,7 @@ extern    "C" {
     int       rrd_fetch(
     int,
     char **,
+    time_t *,
     time_t *,
     time_t *,
     unsigned long *,
@@ -252,7 +258,11 @@ extern    "C" {
             unsigned long *step,
             unsigned long *ds_cnt,
             char ***ds_namv,
-            rrd_value_t **data);
+            rrd_value_t **data,
+            bool single_arg_present,
+            bool search_backwards,
+            bool stop_present,
+            time_t *stop);
     int       rrd_dump_r(
     const char *filename,
     char *outname);
@@ -309,6 +319,9 @@ int       rrd_proc_start_end(
     rrd_time_value_t *,
     rrd_time_value_t *,
     time_t *,
+    time_t *);
+int       rrd_proc_single(
+    rrd_time_value_t *,
     time_t *);
 
 /* HELPER FUNCTIONS */

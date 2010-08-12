@@ -64,6 +64,7 @@ int rrd_fetch(
     time_t *start,
     time_t *end,        /* which time frame do you want ?
                          * will be changed to represent reality */
+    time_t *stop,
     unsigned long *step,    /* which stepsize do you want? 
                              * will be changed to represent reality */
     unsigned long *ds_cnt,  /* number of data sources in file */
@@ -71,18 +72,26 @@ int rrd_fetch(
     rrd_value_t **data)
 {                       /* two dimensional array containing the data */
     long      step_tmp = 1;
-    time_t    start_tmp = 0, end_tmp = 0;
+    time_t    start_tmp = 0, end_tmp = 0, single_tmp = 0, stop_tmp = 0;
     const char *cf;
     char *opt_daemon = NULL;
     int status;
+    bool search_backwards = false;
+    bool start_arg_present = false;
+    bool end_arg_present = false;
+    bool single_arg_present = false;
+    bool stop_present = false;
 
-    rrd_time_value_t start_tv, end_tv;
+    rrd_time_value_t start_tv, end_tv, single_tv, stop_tv;
     char     *parsetime_error = NULL;
     struct option long_options[] = {
         {"resolution", required_argument, 0, 'r'},
         {"start", required_argument, 0, 's'},
         {"end", required_argument, 0, 'e'},
         {"daemon", required_argument, 0, 'd'},
+        {"single", required_argument, 0, 't'},
+        {"backwards", no_argument, 0, 'b'},
+        {"stop", required_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
 
@@ -92,24 +101,27 @@ int rrd_fetch(
     /* init start and end time */
     rrd_parsetime("end-24h", &start_tv);
     rrd_parsetime("now", &end_tv);
+    rrd_parsetime("now", &single_tv);
 
     while (1) {
         int       option_index = 0;
         int       opt;
 
-        opt = getopt_long(argc, argv, "r:s:e:d:", long_options, &option_index);
+        opt = getopt_long(argc, argv, "r:s:e:d:t:bh:", long_options, &option_index);
 
         if (opt == EOF)
             break;
 
         switch (opt) {
         case 's':
+            start_arg_present = true;
             if ((parsetime_error = rrd_parsetime(optarg, &start_tv))) {
                 rrd_set_error("start time: %s", parsetime_error);
                 return -1;
             }
             break;
         case 'e':
+            end_arg_present = true;
             if ((parsetime_error = rrd_parsetime(optarg, &end_tv))) {
                 rrd_set_error("end time: %s", parsetime_error);
                 return -1;
@@ -130,15 +142,67 @@ int rrd_fetch(
             }
             break;
 
+        case 't':
+            single_arg_present = true;
+            if ((parsetime_error = rrd_parsetime(optarg, &single_tv))) {
+                rrd_set_error("single time: %s", parsetime_error);
+                return -1;
+            }
+            break;
+
+        case 'b':
+            if (!single_arg_present) {
+                rrd_set_error("indeterminate mode");
+                return -1;
+            }
+            search_backwards = true;
+            break;
+
+        case 'h':
+            if (!single_arg_present) {
+                rrd_set_error("indeterminate mode");
+                return -1;
+            }
+            stop_present = true;
+            if ((parsetime_error = rrd_parsetime(optarg, &stop_tv))) {
+                rrd_set_error("stop check: %s", parsetime_error);
+                return -1;
+            }
+            break;
+
         case '?':
             rrd_set_error("unknown option '-%c'", optopt);
             return (-1);
         }
     }
 
-
-    if (rrd_proc_start_end(&start_tv, &end_tv, &start_tmp, &end_tmp) == -1) {
+    if ( (!single_arg_present || start_arg_present || end_arg_present) && 
+            (single_arg_present || !start_arg_present || !end_arg_present) ) {
+        rrd_set_error("indeterminate mode");
         return -1;
+    }
+
+    if (single_arg_present) {
+        if (rrd_proc_single(&single_tv, &single_tmp) == -1) {
+            return -1;
+        }
+        start_tmp = end_tmp = single_tmp;
+        
+        if(stop_present) {
+            if (rrd_proc_single(&stop_tv, &stop_tmp) == -1) {
+                return -1;
+            }
+        }
+        else {
+            stop_tmp = single_tmp; //So that stop can treated as an int.  Value should never be used.
+        }
+
+        *stop = stop_tmp;
+    }
+    else {
+        if (rrd_proc_start_end(&start_tv, &end_tv, &start_tmp, &end_tmp) == -1) {
+            return -1;
+        }
     }
 
 
@@ -176,7 +240,7 @@ int rrd_fetch(
 
     else
 	    status = rrd_fetch_r(argv[optind], cf, start, end, step,
-			    ds_cnt, ds_namv, data);
+			    ds_cnt, ds_namv, data, single_arg_present, search_backwards, stop_present, stop);
 
     if (status != 0)
         return (-1);
@@ -193,7 +257,12 @@ int rrd_fetch_r(
                              * will be changed to represent reality */
     unsigned long *ds_cnt,  /* number of data sources in file */
     char ***ds_namv,    /* names of data_sources */
-    rrd_value_t **data)
+    rrd_value_t **data,
+    
+    bool single_arg_present,
+    bool search_backwards,
+    bool stop_present,
+    time_t *stop)
 {                       /* two dimensional array containing the data */
     enum cf_en cf_idx;
 
@@ -202,7 +271,8 @@ int rrd_fetch_r(
     }
 
     return (rrd_fetch_fn
-            (filename, cf_idx, start, end, step, ds_cnt, ds_namv, data));
+            (filename, cf_idx, start, end, step, ds_cnt, ds_namv, data,
+             single_arg_present, search_backwards, stop_present, stop));
 } /* int rrd_fetch_r */
 
 int rrd_fetch_fn(
@@ -215,7 +285,12 @@ int rrd_fetch_fn(
                              * will be changed to represent reality */
     unsigned long *ds_cnt,  /* number of data sources in file */
     char ***ds_namv,    /* names of data_sources */
-    rrd_value_t **data)
+    rrd_value_t **data,
+    
+    bool single_arg_present,
+    bool search_backwards,
+    bool stop_present,
+    time_t *stop)
 {                       /* two dimensional array containing the data */
     long      i, ii;
     time_t    cal_start, cal_end, rra_start_time, rra_end_time;
@@ -231,6 +306,7 @@ int rrd_fetch_fn(
     rrd_file_t *rrd_file;
     rrd_value_t *data_ptr;
     unsigned long rows;
+    bool found_a_nan = true;
 
 #ifdef DEBUG
     fprintf(stderr, "Entered rrd_fetch_fn() searching for the best match\n");
@@ -378,97 +454,141 @@ int rrd_fetch_fn(
                     - (rrd.live_head->last_up % *step));
     rra_start_time = (rra_end_time
                       - (*step * (rrd.rra_def[chosen_rra].row_cnt - 1)));
-    /* here's an error by one if we don't be careful */
-    start_offset = (long) (*start + *step - rra_start_time) / (long) *step;
-    end_offset = (long) (rra_end_time - *end) / (long) *step;
-#ifdef DEBUG
-    fprintf(stderr,
-            "rra_start %lu, rra_end %lu, start_off %li, end_off %li\n",
-            rra_start_time, rra_end_time, start_offset, end_offset);
-#endif
-    /* only seek if the start time is before the end time */
-    if (*start <= rra_end_time && *end >= rra_start_time - (off_t)*step ){
-        if (start_offset <= 0)
-            rra_pointer = rrd.rra_ptr[chosen_rra].cur_row + 1;
-        else
-            rra_pointer = rrd.rra_ptr[chosen_rra].cur_row + 1 + start_offset;
-
-        rra_pointer = rra_pointer % (signed) rrd.rra_def[chosen_rra].row_cnt;
-         
-        if (rrd_seek(rrd_file, (rra_base + (rra_pointer * (*ds_cnt)
-                                        * sizeof(rrd_value_t))),
-                 SEEK_SET) != 0) {
-            rrd_set_error("seek error in RRA");
-            goto err_free_data;
-        }
-#ifdef DEBUG
-        fprintf(stderr, "First Seek: rra_base %lu rra_pointer %lu\n",
-                rra_base, rra_pointer);
-#endif
-    }
     
-    /* step trough the array */
+    // Loop for searching if NaNs are found
+    while (found_a_nan) {  // Not entirely sure why the loop starts here.
 
-    for (i = start_offset;
-         i < (signed) rrd.rra_def[chosen_rra].row_cnt - end_offset; i++) {
-        /* no valid data yet */
-        if (i < 0) {
+        /* here's an error by one if we don't be careful */
+        start_offset = (long) (*start + *step - rra_start_time) / (long) *step;
+        end_offset = (long) (rra_end_time - *end) / (long) *step;
 #ifdef DEBUG
-            fprintf(stderr, "pre fetch %li -- ", i);
+        fprintf(stderr,
+                "rra_start %lu, rra_end %lu, start_off %li, end_off %li\n",
+                rra_start_time, rra_end_time, start_offset, end_offset);
 #endif
-            for (ii = 0; (unsigned) ii < *ds_cnt; ii++) {
-                *(data_ptr++) = DNAN;
-#ifdef DEBUG
-                fprintf(stderr, "%10.2f ", *(data_ptr - 1));
-#endif
-            }
-        }
-        /* past the valid data area */
-        else if (i >= (signed) rrd.rra_def[chosen_rra].row_cnt) {
-#ifdef DEBUG
-            fprintf(stderr, "past fetch %li -- ", i);
-#endif
-            for (ii = 0; (unsigned) ii < *ds_cnt; ii++) {
-                *(data_ptr++) = DNAN;
-#ifdef DEBUG
-                fprintf(stderr, "%10.2f ", *(data_ptr - 1));
-#endif
-            }
-        } else {
-            /* OK we are inside the valid area but the pointer has to 
-             * be wrapped*/
-            if (rra_pointer >= (signed) rrd.rra_def[chosen_rra].row_cnt) {
-                rra_pointer -= rrd.rra_def[chosen_rra].row_cnt;
-                if (rrd_seek(rrd_file, (rra_base + rra_pointer * (*ds_cnt)
-                                        * sizeof(rrd_value_t)),
-                             SEEK_SET) != 0) {
-                    rrd_set_error("wrap seek in RRA did fail");
-                    goto err_free_data;
-                }
-#ifdef DEBUG
-                fprintf(stderr, "wrap seek ...\n");
-#endif
-            }
+        /* only seek if the start time is before the end time */
+        if (*start <= rra_end_time && *end >= rra_start_time - (off_t)*step ){
+            if (start_offset <= 0)
+                rra_pointer = rrd.rra_ptr[chosen_rra].cur_row + 1;
+            else
+                rra_pointer = rrd.rra_ptr[chosen_rra].cur_row + 1 + start_offset;
 
-            if (rrd_read(rrd_file, data_ptr, sizeof(rrd_value_t) * (*ds_cnt))
-                != (ssize_t) (sizeof(rrd_value_t) * (*ds_cnt))) {
-                rrd_set_error("fetching cdp from rra");
+            rra_pointer = rra_pointer % (signed) rrd.rra_def[chosen_rra].row_cnt;
+         
+            if (rrd_seek(rrd_file, (rra_base + (rra_pointer * (*ds_cnt)
+                                            * sizeof(rrd_value_t))),
+                     SEEK_SET) != 0) {
+                rrd_set_error("seek error in RRA");
                 goto err_free_data;
             }
 #ifdef DEBUG
-            fprintf(stderr, "post fetch %li -- ", i);
-            for (ii = 0; ii < *ds_cnt; ii++)
-                fprintf(stderr, "%10.2f ", *(data_ptr + ii));
+            fprintf(stderr, "First Seek: rra_base %lu rra_pointer %lu\n",
+                    rra_base, rra_pointer);
 #endif
-            data_ptr += *ds_cnt;
-            rra_pointer++;
         }
+    
+    /* step through the array */
+    
+        for (i = start_offset;
+             i < (signed) rrd.rra_def[chosen_rra].row_cnt - end_offset; i++) {
+        /* no valid data yet */
+            if (i < 0) {
 #ifdef DEBUG
-        fprintf(stderr, "\n");
+                fprintf(stderr, "pre fetch %li -- ", i);
 #endif
+                if(single_arg_present && (*stop >= *end || !stop_present)) {
+                    *start += *step;
+                    *end += *step;
+                    found_a_nan = true;
+                    break;
+                }
+                
 
+                for (ii = 0; (unsigned) ii < *ds_cnt; ii++) {
+                    *(data_ptr++) = DNAN;
+#ifdef DEBUG
+                    fprintf(stderr, "%10.2f ", *(data_ptr - 1));
+#endif
+                }
+            }
+
+            /* past the valid data area */
+            else if (i >= (signed) rrd.rra_def[chosen_rra].row_cnt) {
+#ifdef DEBUG
+                fprintf(stderr, "past fetch %li -- ", i);
+#endif
+                if(single_arg_present && (*stop <= *start || !stop_present)) {
+                    *start -= *step;
+                    *end -= *step;
+                    found_a_nan = true;
+                    break;
+                }
+                
+            
+                for (ii = 0; (unsigned) ii < *ds_cnt; ii++) {
+                    *(data_ptr++) = DNAN;
+#ifdef DEBUG
+                    fprintf(stderr, "%10.2f ", *(data_ptr - 1));
+#endif
+                }
+            } else {
+                /* OK we are inside the valid area but the pointer has to 
+                 * be wrapped*/
+
+                if (rra_pointer >= (signed) rrd.rra_def[chosen_rra].row_cnt) {
+                    rra_pointer -= rrd.rra_def[chosen_rra].row_cnt;
+                    if (rrd_seek(rrd_file, (rra_base + rra_pointer * (*ds_cnt)
+                                            * sizeof(rrd_value_t)),
+                                 SEEK_SET) != 0) {
+                        rrd_set_error("wrap seek in RRA did fail");
+                        goto err_free_data;
+                    }
+                    rrd_set_error("wrapper");
+                    return -1;
+#ifdef DEBUG
+                    fprintf(stderr, "wrap seek ...\n");
+#endif
+                }
+                // Reads the value from the rrd file.
+                if (rrd_read(rrd_file, data_ptr, sizeof(rrd_value_t) * (*ds_cnt))
+                    != (ssize_t) (sizeof(rrd_value_t) * (*ds_cnt))) {
+                    rrd_set_error("fetching cdp from rra");
+                    goto err_free_data;
+                }
+                
+                // single argument mode and the data is a NaN
+                if(single_arg_present && *data_ptr != *data_ptr) {
+                    found_a_nan = true;
+                    
+                    // It searches backwards unless it passes a stop, or indefinately if there is no stop
+                    if(search_backwards && (*stop <= *start || !stop_present)){
+                        *start -= *step;
+                        *end -= *step;
+                
+                        break;
+                    } // Searches forwards unless it passes a stop, or indefinately if there is no stop
+                    else if(!search_backwards && (*stop >= *end || !stop_present)){
+                        *start += *step;
+                        *end += *step;
+                        
+                        break;
+                    }
+                }
+
+#ifdef DEBUG
+                fprintf(stderr, "post fetch %li -- ", i);
+                for (ii = 0; ii < *ds_cnt; ii++)
+                    fprintf(stderr, "%10.2f ", *(data_ptr + ii));
+#endif
+                data_ptr += *ds_cnt;
+                rra_pointer++;
+            }
+#ifdef DEBUG
+            fprintf(stderr, "\n");
+#endif
+            found_a_nan = false;
+        }
     }
-
     rrd_close(rrd_file);
     rrd_free(&rrd);
     return (0);
