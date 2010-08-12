@@ -878,6 +878,8 @@ int data_fetch(
             }
             else
             {
+                time_t stop=0;
+                (void)stop;
                 if ((rrd_fetch_fn(im->gdes[i].rrd,
                                 im->gdes[i].cf,
                                 &im->gdes[i].start,
@@ -885,7 +887,7 @@ int data_fetch(
                                 &ft_step,
                                 &im->gdes[i].ds_cnt,
                                 &im->gdes[i].ds_namv,
-                                &im->gdes[i].data)) == -1) {
+                                &im->gdes[i].data, false, false, false, &stop)) == -1) {
                     return -1;
                 }
             }

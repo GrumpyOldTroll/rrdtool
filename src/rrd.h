@@ -139,10 +139,12 @@ extern    "C" {
     size_t,
     void *);
 
+#ifndef PERLPATCHLEVEL
     typedef enum bool {
         true = 1,
         false = 0,
     } bool;
+#endif
 
 /* main function blocks */
     int       rrd_create(

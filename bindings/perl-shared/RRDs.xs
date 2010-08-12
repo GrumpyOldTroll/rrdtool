@@ -249,7 +249,7 @@ SV *
 rrd_fetch(...)
 	PROTOTYPE: @	
 	PREINIT:
-		time_t        start,end;		
+		time_t        start,end,stop;		
 		unsigned long step, ds_cnt,i,ii;
 		rrd_value_t   *data,*datai;
 		char **argv;
@@ -267,7 +267,7 @@ rrd_fetch(...)
 		    strcpy(argv[i+1],handle);
  	        }
 		rrd_clear_error();
-		rrd_fetch(items+1,argv,&start,&end,&step,&ds_cnt,&ds_namv,&data); 
+		rrd_fetch(items+1,argv,&start,&end,&stop,&step,&ds_cnt,&ds_namv,&data); 
 		for (i=0; i < items; i++) {
 		    free(argv[i+1]);
 		}
