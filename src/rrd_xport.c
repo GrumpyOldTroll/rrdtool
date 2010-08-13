@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 
 #include "rrd_tool.h"
+#ifndef RRD_NO_GRAPHICS
 #include "rrd_graph.h"
 #include "rrd_xport.h"
 #include "unused.h"
@@ -319,3 +320,6 @@ int rrd_xport_fn(
     return 0;
 
 }
+
+#endif // RRD_NO_GRAPHICS
+

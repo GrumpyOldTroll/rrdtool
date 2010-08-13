@@ -216,12 +216,14 @@ VALUE rb_rrd_updatev(
     return rb_rrd_infocall(rrd_update_v, args);
 }
 
+#ifndef RRD_NO_GRAPH
 VALUE rb_rrd_graphv(
     VALUE self,
     VALUE args)
 {
     return rb_rrd_infocall(rrd_graph_v, args);
 }
+#endif // RRD_NO_GRAPH
 
 
 /* Other Calls */
@@ -273,6 +275,7 @@ VALUE rb_rrd_fetch(
     return result;
 }
 
+#ifndef RRD_NO_GRAPH
 VALUE rb_rrd_graph(
     VALUE self,
     VALUE args)
@@ -302,6 +305,7 @@ VALUE rb_rrd_graph(
     rb_ary_store(result, 2, INT2FIX(ysize));
     return result;
 }
+#endif // RRD_NO_GRAPH
 
 
 VALUE rb_rrd_last(
@@ -320,6 +324,7 @@ VALUE rb_rrd_last(
         return rb_funcall(rb_cTime, rb_intern("at"), 1, UINT2NUM(last));
 }
 
+#ifndef RRD_NO_GRAPH
 VALUE rb_rrd_xport(
     VALUE self,
     VALUE args)
@@ -366,6 +371,7 @@ VALUE rb_rrd_xport(
     rb_ary_store(result, 5, rdata);
     return result;
 }
+#endif // RRD_NO_GRAPH
 
 void Init_RRD(
     )
@@ -376,7 +382,9 @@ void Init_RRD(
     rb_define_module_function(mRRD, "create", rb_rrd_create, -2);
     rb_define_module_function(mRRD, "dump", rb_rrd_dump, -2);
     rb_define_module_function(mRRD, "fetch", rb_rrd_fetch, -2);
+#ifndef RRD_NO_GRAPH
     rb_define_module_function(mRRD, "graph", rb_rrd_graph, -2);
+#endif
     rb_define_module_function(mRRD, "last", rb_rrd_last, -2);
     rb_define_module_function(mRRD, "resize", rb_rrd_resize, -2);
     rb_define_module_function(mRRD, "restore", rb_rrd_restore, -2);
@@ -385,6 +393,8 @@ void Init_RRD(
     rb_define_module_function(mRRD, "flushcached", rb_rrd_flushcached, -2);
     rb_define_module_function(mRRD, "info", rb_rrd_info, -2);
     rb_define_module_function(mRRD, "updatev", rb_rrd_updatev, -2);
+#ifndef RRD_NO_GRAPH
     rb_define_module_function(mRRD, "graphv", rb_rrd_graphv, -2);
     rb_define_module_function(mRRD, "xport", rb_rrd_xport, -2);
+#endif
 }

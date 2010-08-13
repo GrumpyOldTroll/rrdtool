@@ -5,6 +5,8 @@
  *                     this code initially written by Alex van den Bogaerdt
  ****************************************************************************/
 
+#include "rrd_tool.h"
+#ifndef RRD_NO_GRAPHICS
 #include "rrd_graph.h"
 
 #define dprintf if (gdp->debug) printf
@@ -1206,3 +1208,5 @@ void rrd_graph_script(
         }
     }
 }
+#endif // RRD_NO_GRAPHICS
+

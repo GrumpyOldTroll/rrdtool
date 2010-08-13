@@ -26,13 +26,19 @@
 extern    "C" {
 #endif
 
+#ifdef __CYGWIN__
+#define OPT_DECL __declspec(dllimport)
+#else
+#define OPT_DECL
+#endif
+
 /* For communication from `getopt' to the caller.
    When `getopt' finds an option that takes an argument,
    the argument value is returned here.
    Also, when `ordering' is RETURN_IN_ORDER,
    each non-option ARGV-element is returned here.  */
 
-    extern char *optarg;
+    extern char OPT_DECL *optarg;
 
 /* Index in ARGV of the next element to be scanned.
    This is used for communication to and from the caller
@@ -46,16 +52,16 @@ extern    "C" {
    Otherwise, `optind' communicates from one call to the next
    how much of ARGV has been scanned so far.  */
 
-    extern int optind;
+    extern int OPT_DECL optind;
 
 /* Callers store zero here to inhibit the error message `getopt' prints
    for unrecognized options.  */
 
-    extern int opterr;
+    extern int OPT_DECL opterr;
 
 /* Set to an option character which was unrecognized.  */
 
-    extern int optopt;
+    extern int OPT_DECL optopt;
 
 /* Describe the long-named options requested by the application.
    The LONG_OPTIONS argument to getopt_long or getopt_long_only is a vector
@@ -108,7 +114,7 @@ extern    "C" {
     const char *shortopts);
 #else                   /* not __GNU_LIBRARY__ */
     extern int getopt(
-        );
+        int, char * const *, const char *);
 #endif                  /* __GNU_LIBRARY__ */
     extern int getopt_long(
     int argc,

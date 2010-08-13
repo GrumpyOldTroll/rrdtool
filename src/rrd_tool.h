@@ -16,6 +16,8 @@ extern    "C" {
 #include "../win32/config.h"
 #endif
 
+#define RRD_NO_GRAPH
+
 #include "rrd.h"
 
 #if defined(_WIN32) && !defined(__CYGWIN__) && !defined(__CYGWIN32__)

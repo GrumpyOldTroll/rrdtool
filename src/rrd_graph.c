@@ -13,6 +13,8 @@
 
 #include "rrd_tool.h"
 
+#ifndef RRD_NO_GRAPHICS
+
 /* for basename */
 #ifdef HAVE_LIBGEN_H
 #  include <libgen.h>
@@ -5386,3 +5388,5 @@ void time_clean(
     }
     result[jj] = '\0'; /* We must force the end of the string */
 }
+#endif // RRD_NO_GRAPHICS
+

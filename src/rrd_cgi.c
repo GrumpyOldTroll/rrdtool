@@ -540,7 +540,9 @@ int main(
         }
         parse(&buffer, i, "<RRD::GETVAR", rrdgetvar);
         parse(&buffer, i, "<RRD::GOODFOR", rrdgoodfor);
+#ifndef RRD_NO_GRAPH
         parse(&buffer, i, "<RRD::GRAPH", drawgraph);
+#endif // RRD_NO_GRAPH
         parse(&buffer, i, "<RRD::INCLUDE", includefile);
         parse(&buffer, i, "<RRD::PRINT", drawprint);
         parse(&buffer, i, "<RRD::SETCONSTVAR", rrdsetvarconst);
@@ -927,7 +929,7 @@ char     *cgiget(
 }
 
 
-
+#ifndef RRD_NO_GRAPH
 char     *drawgraph(
     long argc,
     const char **args)
@@ -959,6 +961,7 @@ char     *drawgraph(
     }
     return NULL;
 }
+#endif // RRD_NO_GRAPH
 
 char     *drawprint(
     long argc,
