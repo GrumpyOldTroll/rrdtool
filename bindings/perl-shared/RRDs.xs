@@ -199,6 +199,8 @@ rrd_tune(...)
 		RETVAL
 
 
+#ifndef RRD_NO_GRAPHICS
+
 SV *
 rrd_graph(...)
 	PROTOTYPE: @	
@@ -209,7 +211,6 @@ rrd_graph(...)
 	char **argv;
 	AV *retar;
 	PPCODE:
-#ifndef RRD_NO_GRAPHICS
 		argv = (char **) malloc((items+1)*sizeof(char *));
 		argv[0] = "dummy";
 		for (i = 0; i < items; i++) { 
@@ -245,7 +246,9 @@ rrd_graph(...)
 		PUSHs(sv_2mortal(newRV_noinc((SV*)retar)));
 		PUSHs(sv_2mortal(newSViv(xsize)));
 		PUSHs(sv_2mortal(newSViv(ysize)));
+
 #endif // RRD_NO_GRAPHICS
+
 
 SV *
 rrd_fetch(...)
@@ -325,6 +328,9 @@ rrd_times(start, end)
 		PUSHs(sv_2mortal(newSVuv(start_tmp)));
 		PUSHs(sv_2mortal(newSVuv(end_tmp)));
 
+
+#ifndef RRD_NO_GRAPHICS
+
 int
 rrd_xport(...)
 	PROTOTYPE: @	
@@ -336,7 +342,6 @@ rrd_xport(...)
                 char **argv,**legend_v;
 		AV *retar,*line,*names;
 	PPCODE:
-#ifndef RRD_NO_GRAPHICS
 		argv = (char **) malloc((items+1)*sizeof(char *));
 		argv[0] = "dummy";
 		for (i = 0; i < items; i++) { 
@@ -383,7 +388,9 @@ rrd_xport(...)
 		PUSHs(sv_2mortal(newSViv(col_cnt)));
 		PUSHs(sv_2mortal(newRV_noinc((SV*)names)));
 		PUSHs(sv_2mortal(newRV_noinc((SV*)retar)));
+
 #endif // RRD_NO_GRAPHICS
+
 
 SV*
 rrd_info(...)
@@ -411,6 +418,9 @@ rrd_updatev(...)
     OUTPUT:
 	   RETVAL
 
+
+#ifndef RRD_NO_GRAPHICS
+
 SV*
 rrd_graphv(...)
 	PROTOTYPE: @	
@@ -420,11 +430,12 @@ rrd_graphv(...)
                 char **argv;
 		HV *hash;
 	CODE:
-#ifndef RRD_NO_GRAPHICS
 		rrdinfocode(rrd_graph_v);	
-#endif // RRD_NO_GRAPHICS
     OUTPUT:
 	   RETVAL
+
+#endif // RRD_NO_GRAPHICS
+
 
 int
 rrd_dump(...)
