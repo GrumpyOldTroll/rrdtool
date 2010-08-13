@@ -199,6 +199,8 @@ rrd_tune(...)
 		RETVAL
 
 
+#ifndef RRD_NO_GRAPHICS
+
 SV *
 rrd_graph(...)
 	PROTOTYPE: @	
@@ -244,6 +246,9 @@ rrd_graph(...)
 		PUSHs(sv_2mortal(newRV_noinc((SV*)retar)));
 		PUSHs(sv_2mortal(newSViv(xsize)));
 		PUSHs(sv_2mortal(newSViv(ysize)));
+
+#endif // RRD_NO_GRAPHICS
+
 
 SV *
 rrd_fetch(...)
@@ -323,6 +328,9 @@ rrd_times(start, end)
 		PUSHs(sv_2mortal(newSVuv(start_tmp)));
 		PUSHs(sv_2mortal(newSVuv(end_tmp)));
 
+
+#ifndef RRD_NO_GRAPHICS
+
 int
 rrd_xport(...)
 	PROTOTYPE: @	
@@ -381,6 +389,9 @@ rrd_xport(...)
 		PUSHs(sv_2mortal(newRV_noinc((SV*)names)));
 		PUSHs(sv_2mortal(newRV_noinc((SV*)retar)));
 
+#endif // RRD_NO_GRAPHICS
+
+
 SV*
 rrd_info(...)
 	PROTOTYPE: @	
@@ -407,6 +418,9 @@ rrd_updatev(...)
     OUTPUT:
 	   RETVAL
 
+
+#ifndef RRD_NO_GRAPHICS
+
 SV*
 rrd_graphv(...)
 	PROTOTYPE: @	
@@ -419,6 +433,9 @@ rrd_graphv(...)
 		rrdinfocode(rrd_graph_v);	
     OUTPUT:
 	   RETVAL
+
+#endif // RRD_NO_GRAPHICS
+
 
 int
 rrd_dump(...)

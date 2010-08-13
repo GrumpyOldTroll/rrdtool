@@ -11,7 +11,8 @@ dnl tell automake the this script is for rrdtool
 dnl Minimum Autoconf version required.
 AC_PREREQ(2.59)
 
-dnl in cygwin, you'll do: ./configure --enable-maintainer-mode --with-rrd-default-font=/cygdrive/c/Windows/Fonts/cour.ttf
+dnl in cygwin, you'll do: ./configure --disable-graph --with-rrd-default-font=/cygdrive/c/Windows/Fonts/cour.ttf
+dnl (because cairo is not easily available and the default font is not auto-detected)
 
 dnl the official version number is
 dnl a.b.c
@@ -629,7 +630,20 @@ if test ! -z "$PERLCC"; then
        PERL_MAKE_OPTIONS="$PERL_MAKE_OPTIONS LDFLAGS=$PERLLDFLAGS"
    fi
 fi
-        
+
+if test "x$GRAPH" = "xno" -o  x$enable_graph = xno; then
+    dnl I chose OPTIMIZE because if I set PERLCCFLAGS, I found that several
+    dnl apparent defaults are not propagated the same way.  On my system,
+    dnl if I don't set anything, bindings/perl-shared/Makefile ended up with 
+    dnl this line:
+    dnl CCFLAGS = -DPERL_USE_SAFE_PUTENV -U__STRICT_ANSI__ -fno-strict-aliasing -pipe -I/usr/local/include -DUSEIMPORTLIB
+    dnl if I set PERLCCFLAGS="-DRRD_NO_GRAPHICS" it instead says:
+    dnl CCFLAGS = -DRRD_NO_GRAPHICS -DUSEIMPORTLIB
+    dnl OPTIMIZE by default had -O3, and now has both mine.  I don't see
+    dnl how to preserve the defaults and also set something totally new.
+    PERL_MAKE_OPTIONS="$PERL_MAKE_OPTIONS OPTIMIZE=\"-O3 -DRRD_NO_GRAPHICS\""
+fi
+
 AC_ARG_WITH(perl-options,
 [  --with-perl-options=[OPTIONS]  options to pass on command-line when
                           generating Makefile from Makefile.PL. If you set this
