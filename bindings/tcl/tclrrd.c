@@ -416,7 +416,7 @@ static int Rrd_Fetch(
     int argc,
     CONST84 char *argv[])
 {
-    time_t    start, end, j;
+    time_t    start, end, stop, j;
     unsigned long step, ds_cnt, i, ii;
     rrd_value_t *data, *datai;
     char    **ds_namv;
@@ -425,7 +425,7 @@ static int Rrd_Fetch(
     char    **argv2;
 
     argv2 = getopt_init(argc, argv);
-    if (rrd_fetch(argc, argv2, &start, &end, &step,
+    if (rrd_fetch(argc, argv2, &start, &end, &stop, &step,
                   &ds_cnt, &ds_namv, &data) != -1) {
         datai = data;
         listPtr = Tcl_GetObjResult(interp);

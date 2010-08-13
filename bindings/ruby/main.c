@@ -237,11 +237,11 @@ VALUE rb_rrd_fetch(
     rrd_value_t *raw_data;
     char    **raw_names;
     VALUE     data, names, result;
-    time_t    start, end;
+    time_t    start, end, stop;
 
     a = string_arr_new(args);
     reset_rrd_state();
-    rrd_fetch(a.len, a.strings, &start, &end, &step, &ds_cnt, &raw_names,
+    rrd_fetch(a.len, a.strings, &start, &end, &stop, &step, &ds_cnt, &raw_names,
               &raw_data);
     string_arr_delete(a);
 
